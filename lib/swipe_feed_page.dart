@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'cards_section_alignment.dart';
-import 'profile_card_alignment.dart';
+import 'profile_card.dart';
 
 class SwipeFeedPage extends StatefulWidget {
   @override
@@ -26,7 +26,7 @@ class _SwipeFeedPageState extends State<SwipeFeedPage> {
                   constraints.maxWidth,
                   constraints.maxHeight,
                 ),
-                cards: [ProfileCardAlignment(1), ProfileCardAlignment(2), ProfileCardAlignment(3)],
+                cards: [ProfileCard(1), ProfileCard(2), ProfileCard(3)],
               ),
             ],
           ),

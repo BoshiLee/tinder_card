@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import 'profile_card_alignment.dart';
+import 'profile_card.dart';
 
 List<Alignment> cardsAlign = [Alignment(0.0, 1.0), Alignment(0.0, 0.8), Alignment(0.0, 0.0)];
 List<Size> cardsSize = List(3);
@@ -12,7 +12,7 @@ enum CardAlignment { left, right }
 class CardsSectionAlignment extends StatefulWidget {
   final ValueChanged<double> onCardDrag;
   final ValueChanged<CardAlignment> onDragEnd;
-  final List<ProfileCardAlignment> cards;
+  final List<ProfileCard> cards;
 
   CardsSectionAlignment(Size size, {this.cards = const [], this.onCardDrag, this.onDragEnd}) {
     cardsSize[0] = Size(size.width * 0.9, size.height * 0.9);
@@ -32,7 +32,7 @@ class _CardsSectionState extends State<CardsSectionAlignment> with SingleTickerP
   final Alignment defaultFrontCardAlign = Alignment(0.0, 0.0);
   Alignment frontCardAlign;
   double frontCardRot = 0.0;
-  List<ProfileCardAlignment> cards = [];
+  List<ProfileCard> cards = [];
 
   @override
   void initState() {
@@ -64,7 +64,8 @@ class _CardsSectionState extends State<CardsSectionAlignment> with SingleTickerP
                 }
                 setState(() {
                   // 20 is the "speed" at which moves the card
-                  frontCardAlign = Alignment(frontCardAlign.x + 20 * details.delta.dx / MediaQuery.of(context).size.width,
+                  frontCardAlign = Alignment(
+                      frontCardAlign.x + 20 * details.delta.dx / MediaQuery.of(context).size.width,
                       frontCardAlign.y + 40 * details.delta.dy / MediaQuery.of(context).size.height);
 
                   frontCardRot = frontCardAlign.x; // * rotation speed;
@@ -110,18 +111,26 @@ class _CardsSectionState extends State<CardsSectionAlignment> with SingleTickerP
 
   Widget backCard() {
     return Align(
-      alignment: _controller.status == AnimationStatus.forward ? CardsAnimation.backCardAlignmentAnim(_controller).value : cardsAlign[0],
+      alignment: _controller.status == AnimationStatus.forward
+          ? CardsAnimation.backCardAlignmentAnim(_controller).value
+          : cardsAlign[0],
       child: SizedBox.fromSize(
-          size: _controller.status == AnimationStatus.forward ? CardsAnimation.backCardSizeAnim(_controller).value : cardsSize[2],
+          size: _controller.status == AnimationStatus.forward
+              ? CardsAnimation.backCardSizeAnim(_controller).value
+              : cardsSize[2],
           child: cards[2]),
     );
   }
 
   Widget middleCard() {
     return Align(
-      alignment: _controller.status == AnimationStatus.forward ? CardsAnimation.middleCardAlignmentAnim(_controller).value : cardsAlign[1],
+      alignment: _controller.status == AnimationStatus.forward
+          ? CardsAnimation.middleCardAlignmentAnim(_controller).value
+          : cardsAlign[1],
       child: SizedBox.fromSize(
-          size: _controller.status == AnimationStatus.forward ? CardsAnimation.middleCardSizeAnim(_controller).value : cardsSize[1],
+          size: _controller.status == AnimationStatus.forward
+              ? CardsAnimation.middleCardSizeAnim(_controller).value
+              : cardsSize[1],
           child: cards[1]),
     );
   }
@@ -141,7 +150,7 @@ class _CardsSectionState extends State<CardsSectionAlignment> with SingleTickerP
     setState(() {
       // Swap cards (back card becomes the middle card; middle card becomes the front card, front card becomes a  bottom card)
 
-      cards[2] = ProfileCardAlignment(cardsCounter);
+      cards[2] = ProfileCard(cardsCounter);
       cardsCounter++;
 
       frontCardAlign = defaultFrontCardAlign;
@@ -180,7 +189,8 @@ class CardsAnimation {
   static Animation<Alignment> frontCardDisappearAlignmentAnim(AnimationController parent, Alignment beginAlign) {
     return AlignmentTween(
             begin: beginAlign,
-            end: Alignment(beginAlign.x > 0 ? beginAlign.x + 30.0 : beginAlign.x - 30.0, 0.0) // Has swiped to the left or right?
+            end: Alignment(
+                beginAlign.x > 0 ? beginAlign.x + 30.0 : beginAlign.x - 30.0, 0.0) // Has swiped to the left or right?
             )
         .animate(CurvedAnimation(parent: parent, curve: Interval(0.0, 0.5, curve: Curves.easeIn)));
   }
