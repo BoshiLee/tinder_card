@@ -1,16 +1,8 @@
 # tinder_card
 
-A new Flutter application.
+一個學習如何製作 Tinder Card 的專案，原址為 [Ivaskuu/tinder_cards](https://github.com/Ivaskuu/tinder_cards)
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+本專案只用到部分原專案檔案，目的是學習卡片之間的轉場，若要了解更多請點擊原址。
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
