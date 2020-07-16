@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'profile_card.dart';
 
-List<Alignment> cardsAlign = [Alignment(0.0, 1.0), Alignment(0.0, 0.8), Alignment(0.0, 0.0)];
+List<Alignment> cardsAlign = [Alignment(0.0, 0.75), Alignment(0.0, 0.5), Alignment(0, 0)];
 List<Size> cardsSize = List(3);
 
 enum CardAlignment { left, right }
@@ -25,12 +25,10 @@ class CardsSectionAlignment extends StatefulWidget {
 }
 
 class _CardsSectionState extends State<CardsSectionAlignment> with SingleTickerProviderStateMixin {
-  int cardsCounter = 0;
-
   AnimationController _controller;
 
-  final Alignment defaultFrontCardAlign = Alignment(0.0, 0.0);
-  Alignment frontCardAlign;
+  final Alignment defaultFrontCardAlign = cardsAlign[2];
+  Alignment frontCardAlign = cardsAlign[2];
   double frontCardRot = 0.0;
   List<ProfileCard> cards = [];
 
@@ -40,10 +38,6 @@ class _CardsSectionState extends State<CardsSectionAlignment> with SingleTickerP
 
     // Init cards
     this.cards = widget.cards;
-    cardsCounter = widget.cards.length;
-
-    frontCardAlign = cardsAlign[2];
-
     // Init the animation controller
     _controller = AnimationController(duration: Duration(milliseconds: 700), vsync: this);
     _controller.addListener(() => setState(() {}));
@@ -64,10 +58,11 @@ class _CardsSectionState extends State<CardsSectionAlignment> with SingleTickerP
                 }
                 setState(() {
                   // 20 is the "speed" at which moves the card
+                  // 改變 frontCardAlign 的 x y 決定第一張卡片的位置
                   frontCardAlign = Alignment(
-                      frontCardAlign.x + 20 * details.delta.dx / MediaQuery.of(context).size.width,
-                      frontCardAlign.y + 40 * details.delta.dy / MediaQuery.of(context).size.height);
-
+                    frontCardAlign.x + 20 * details.delta.dx / MediaQuery.of(context).size.width,
+                    frontCardAlign.y + 40 * details.delta.dy / MediaQuery.of(context).size.height,
+                  );
                   frontCardRot = frontCardAlign.x; // * rotation speed;
                 });
               },
@@ -84,6 +79,7 @@ class _CardsSectionState extends State<CardsSectionAlignment> with SingleTickerP
                   // Return to the initial rotation and alignment
                   setState(
                     () {
+                      // 移動結束後 frontCardAlign 回到預設位置
                       frontCardAlign = defaultFrontCardAlign;
                       frontCardRot = 0.0;
                     },
@@ -115,10 +111,11 @@ class _CardsSectionState extends State<CardsSectionAlignment> with SingleTickerP
           ? CardsAnimation.backCardAlignmentAnim(_controller).value
           : cardsAlign[0],
       child: SizedBox.fromSize(
-          size: _controller.status == AnimationStatus.forward
-              ? CardsAnimation.backCardSizeAnim(_controller).value
-              : cardsSize[2],
-          child: cards[2]),
+        size: _controller.status == AnimationStatus.forward
+            ? CardsAnimation.backCardSizeAnim(_controller).value
+            : cardsSize[2],
+        child: cards[2],
+      ),
     );
   }
 
@@ -128,30 +125,29 @@ class _CardsSectionState extends State<CardsSectionAlignment> with SingleTickerP
           ? CardsAnimation.middleCardAlignmentAnim(_controller).value
           : cardsAlign[1],
       child: SizedBox.fromSize(
-          size: _controller.status == AnimationStatus.forward
-              ? CardsAnimation.middleCardSizeAnim(_controller).value
-              : cardsSize[1],
-          child: cards[1]),
+        size: _controller.status == AnimationStatus.forward
+            ? CardsAnimation.middleCardSizeAnim(_controller).value
+            : cardsSize[1],
+        child: cards[1],
+      ),
     );
   }
 
   Widget frontCard() {
     return Align(
-        alignment: _controller.status == AnimationStatus.forward
-            ? CardsAnimation.frontCardDisappearAlignmentAnim(_controller, frontCardAlign).value
-            : frontCardAlign,
-        child: Transform.rotate(
-          angle: (pi / 180.0) * frontCardRot,
-          child: SizedBox.fromSize(size: cardsSize[0], child: cards[0]),
-        ));
+      alignment: _controller.status == AnimationStatus.forward
+          ? CardsAnimation.frontCardDisappearAlignmentAnim(_controller, frontCardAlign).value
+          : frontCardAlign,
+      child: Transform.rotate(
+        angle: (pi / 180.0) * frontCardRot,
+        child: SizedBox.fromSize(size: cardsSize[0], child: cards[0]),
+      ),
+    );
   }
 
   void changeCardsOrder() {
     setState(() {
       // Swap cards (back card becomes the middle card; middle card becomes the front card, front card becomes a  bottom card)
-
-      cards[2] = ProfileCard(cardsCounter);
-      cardsCounter++;
 
       frontCardAlign = defaultFrontCardAlign;
       frontCardRot = 0.0;
