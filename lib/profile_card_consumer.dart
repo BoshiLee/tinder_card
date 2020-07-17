@@ -4,7 +4,7 @@ import 'package:tinder_card/profile_card.dart';
 class ProfileCardConsumer {
   List<ProfileCard> presentingCards = [];
   List<ProfileCard> backCards = [];
-
+  int get remindCards => this.backCards.length;
   List<Alignment> cardsAlign = [Alignment(0.0, 0.75), Alignment(0.0, 0.5), Alignment(0, 0)];
   List<Size> cardsSize = List(3);
 

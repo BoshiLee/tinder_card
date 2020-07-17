@@ -8,8 +8,8 @@ import 'profile_card.dart';
 enum CardAlignment { left, right }
 
 class CardsSectionAlignment extends StatefulWidget {
-  final ValueChanged<double> onCardDrag;
-  final ValueChanged<CardAlignment> onDragEnd;
+  final Function(CardAlignment, double) onCardDrag;
+  final Function(CardAlignment, int) onDragEnd;
   final ProfileCardConsumer consumer;
 
   CardsSectionAlignment(Size size, {List<ProfileCard> cards, this.onCardDrag, this.onDragEnd})
@@ -47,9 +47,6 @@ class _CardsSectionState extends State<CardsSectionAlignment> with SingleTickerP
               // While dragging the first card
               onPanUpdate: (DragUpdateDetails details) {
                 // Add what the user swiped in the last frame to the alignment of the card
-                if (this.widget.onCardDrag != null) {
-                  this.widget.onCardDrag(frontCardAlign.x);
-                }
                 setState(() {
                   // 20 is the "speed" at which moves the card
                   // 改變 frontCardAlign 的 x y 決定第一張卡片的位置
@@ -59,14 +56,18 @@ class _CardsSectionState extends State<CardsSectionAlignment> with SingleTickerP
                   );
                   frontCardRot = frontCardAlign.x; // * rotation speed;
                 });
+                if (this.widget.onCardDrag != null) {
+                  if (frontCardAlign.x > 1.0) this.widget.onCardDrag(CardAlignment.right, frontCardAlign.x);
+                  if (frontCardAlign.x < -1.0) this.widget.onCardDrag(CardAlignment.left, frontCardAlign.x);
+                }
               },
               // When releasing the first card
               onPanEnd: (_) {
                 // If the front card was swiped far enough to count as swiped
                 if (frontCardAlign.x > 3.0 || frontCardAlign.x < -3.0) {
                   if (this.widget.onDragEnd != null) {
-                    if (frontCardAlign.x > 3.0) this.widget.onDragEnd(CardAlignment.right);
-                    if (frontCardAlign.x < -3.0) this.widget.onDragEnd(CardAlignment.left);
+                    if (frontCardAlign.x > 3.0) this.widget.onDragEnd(CardAlignment.right, consumer.remindCards);
+                    if (frontCardAlign.x < -3.0) this.widget.onDragEnd(CardAlignment.left, consumer.remindCards);
                   }
                   animateCards();
                 } else {
