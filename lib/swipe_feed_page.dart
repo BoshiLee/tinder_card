@@ -26,7 +26,7 @@ class _SwipeFeedPageState extends State<SwipeFeedPage> {
                   constraints.maxWidth,
                   constraints.maxHeight,
                 ),
-                cards: [ProfileCard(1), ProfileCard(2), ProfileCard(3)],
+                cards: [ProfileCard(1), ProfileCard(2), ProfileCard(3), ProfileCard(4), ProfileCard(5), ProfileCard(6)],
               ),
             ],
           ),

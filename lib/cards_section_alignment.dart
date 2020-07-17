@@ -1,24 +1,19 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:tinder_card/profile_card_consumer.dart';
 
 import 'profile_card.dart';
-
-List<Alignment> cardsAlign = [Alignment(0.0, 0.75), Alignment(0.0, 0.5), Alignment(0, 0)];
-List<Size> cardsSize = List(3);
 
 enum CardAlignment { left, right }
 
 class CardsSectionAlignment extends StatefulWidget {
   final ValueChanged<double> onCardDrag;
   final ValueChanged<CardAlignment> onDragEnd;
-  final List<ProfileCard> cards;
+  final ProfileCardConsumer consumer;
 
-  CardsSectionAlignment(Size size, {this.cards = const [], this.onCardDrag, this.onDragEnd}) {
-    cardsSize[0] = Size(size.width * 0.9, size.height * 0.9);
-    cardsSize[1] = Size(size.width * 0.85, size.height * 0.85);
-    cardsSize[2] = Size(size.width * 0.8, size.height * 0.8);
-  }
+  CardsSectionAlignment(Size size, {List<ProfileCard> cards, this.onCardDrag, this.onDragEnd})
+      : this.consumer = ProfileCardConsumer(size, cards: cards);
 
   @override
   _CardsSectionState createState() => _CardsSectionState();
@@ -27,17 +22,16 @@ class CardsSectionAlignment extends StatefulWidget {
 class _CardsSectionState extends State<CardsSectionAlignment> with SingleTickerProviderStateMixin {
   AnimationController _controller;
 
-  final Alignment defaultFrontCardAlign = cardsAlign[2];
-  Alignment frontCardAlign = cardsAlign[2];
+  Alignment get defaultFrontCardAlign => this.consumer.cardsAlign[2];
+  Alignment frontCardAlign;
   double frontCardRot = 0.0;
-  List<ProfileCard> cards = [];
+  ProfileCardConsumer consumer;
 
   @override
   void initState() {
     super.initState();
-
-    // Init cards
-    this.cards = widget.cards;
+    this.consumer = widget.consumer;
+    frontCardAlign = this.consumer.cardsAlign[2];
     // Init the animation controller
     _controller = AnimationController(duration: Duration(milliseconds: 700), vsync: this);
     _controller.addListener(() => setState(() {}));
@@ -91,64 +85,91 @@ class _CardsSectionState extends State<CardsSectionAlignment> with SingleTickerP
         : Container();
   }
 
+  List<Widget> _buildCardStack(BuildContext context) {
+    final back = backCard();
+    final middle = middleCard();
+    final front = frontCard();
+    List<Widget> stack = <Widget>[];
+    if (back != null) stack.add(back);
+    if (middle != null) stack.add(middle);
+    if (front != null) stack.add(front);
+    stack.add(this._buildPanMask(context));
+    return stack;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Stack(
-        children: <Widget>[
-          backCard(),
-          middleCard(),
-          frontCard(),
-          this._buildPanMask(context),
-        ],
-      ),
+      child: Stack(children: this._buildCardStack(context)),
     );
   }
 
   Widget backCard() {
-    return Align(
-      alignment: _controller.status == AnimationStatus.forward
-          ? CardsAnimation.backCardAlignmentAnim(_controller).value
-          : cardsAlign[0],
-      child: SizedBox.fromSize(
-        size: _controller.status == AnimationStatus.forward
-            ? CardsAnimation.backCardSizeAnim(_controller).value
-            : cardsSize[2],
-        child: cards[2],
-      ),
-    );
+    return this.consumer.presentingCards.length > 2
+        ? Align(
+            alignment: _controller.status == AnimationStatus.forward
+                ? CardsAnimation.backCardAlignmentAnim(
+                    _controller,
+                    begin: this.consumer.cardsAlign[0],
+                    end: this.consumer.cardsAlign[1],
+                  ).value
+                : this.consumer.cardsAlign[0],
+            child: SizedBox.fromSize(
+              size: _controller.status == AnimationStatus.forward
+                  ? CardsAnimation.backCardSizeAnim(
+                      _controller,
+                      begin: this.consumer.cardsSize[2],
+                      end: this.consumer.cardsSize[1],
+                    ).value
+                  : this.consumer.cardsSize[2],
+              child: this.consumer.presentingCards[2],
+            ),
+          )
+        : null;
   }
 
   Widget middleCard() {
-    return Align(
-      alignment: _controller.status == AnimationStatus.forward
-          ? CardsAnimation.middleCardAlignmentAnim(_controller).value
-          : cardsAlign[1],
-      child: SizedBox.fromSize(
-        size: _controller.status == AnimationStatus.forward
-            ? CardsAnimation.middleCardSizeAnim(_controller).value
-            : cardsSize[1],
-        child: cards[1],
-      ),
-    );
+    return this.consumer.presentingCards.length > 1
+        ? Align(
+            alignment: _controller.status == AnimationStatus.forward
+                ? CardsAnimation.middleCardAlignmentAnim(
+                    _controller,
+                    begin: this.consumer.cardsAlign[1],
+                    end: this.consumer.cardsAlign[2],
+                  ).value
+                : this.consumer.cardsAlign[1],
+            child: SizedBox.fromSize(
+              size: _controller.status == AnimationStatus.forward
+                  ? CardsAnimation.middleCardSizeAnim(
+                      _controller,
+                      begin: this.consumer.cardsSize[1],
+                      end: this.consumer.cardsSize[0],
+                    ).value
+                  : this.consumer.cardsSize[1],
+              child: this.consumer.presentingCards[1],
+            ),
+          )
+        : null;
   }
 
   Widget frontCard() {
-    return Align(
-      alignment: _controller.status == AnimationStatus.forward
-          ? CardsAnimation.frontCardDisappearAlignmentAnim(_controller, frontCardAlign).value
-          : frontCardAlign,
-      child: Transform.rotate(
-        angle: (pi / 180.0) * frontCardRot,
-        child: SizedBox.fromSize(size: cardsSize[0], child: cards[0]),
-      ),
-    );
+    return this.consumer.presentingCards.isNotEmpty
+        ? Align(
+            alignment: _controller.status == AnimationStatus.forward
+                ? CardsAnimation.frontCardDisappearAlignmentAnim(_controller, frontCardAlign).value
+                : frontCardAlign,
+            child: Transform.rotate(
+              angle: (pi / 180.0) * frontCardRot,
+              child: SizedBox.fromSize(size: this.consumer.cardsSize[0], child: this.consumer.presentingCards[0]),
+            ),
+          )
+        : null;
   }
 
   void changeCardsOrder() {
     setState(() {
       // Swap cards (back card becomes the middle card; middle card becomes the front card, front card becomes a  bottom card)
-
+      this.consumer.swapCards();
       frontCardAlign = defaultFrontCardAlign;
       frontCardRot = 0.0;
     });
@@ -162,32 +183,68 @@ class _CardsSectionState extends State<CardsSectionAlignment> with SingleTickerP
 }
 
 class CardsAnimation {
-  static Animation<Alignment> backCardAlignmentAnim(AnimationController parent) {
-    return AlignmentTween(begin: cardsAlign[0], end: cardsAlign[1])
-        .animate(CurvedAnimation(parent: parent, curve: Interval(0.4, 0.7, curve: Curves.easeIn)));
+  static Animation<Alignment> backCardAlignmentAnim(
+    AnimationController parent, {
+    @required Alignment begin,
+    @required Alignment end,
+  }) {
+    return AlignmentTween(begin: begin, end: end).animate(
+      CurvedAnimation(
+        parent: parent,
+        curve: Interval(0.4, 0.7, curve: Curves.easeIn),
+      ),
+    );
   }
 
-  static Animation<Size> backCardSizeAnim(AnimationController parent) {
-    return SizeTween(begin: cardsSize[2], end: cardsSize[1])
-        .animate(CurvedAnimation(parent: parent, curve: Interval(0.4, 0.7, curve: Curves.easeIn)));
+  static Animation<Size> backCardSizeAnim(
+    AnimationController parent, {
+    @required Size begin,
+    @required Size end,
+  }) {
+    return SizeTween(begin: begin, end: end).animate(
+      CurvedAnimation(
+        parent: parent,
+        curve: Interval(0.4, 0.7, curve: Curves.easeIn),
+      ),
+    );
   }
 
-  static Animation<Alignment> middleCardAlignmentAnim(AnimationController parent) {
-    return AlignmentTween(begin: cardsAlign[1], end: cardsAlign[2])
-        .animate(CurvedAnimation(parent: parent, curve: Interval(0.2, 0.5, curve: Curves.easeIn)));
+  static Animation<Alignment> middleCardAlignmentAnim(
+    AnimationController parent, {
+    @required Alignment begin,
+    @required Alignment end,
+  }) {
+    return AlignmentTween(begin: begin, end: end).animate(
+      CurvedAnimation(
+        parent: parent,
+        curve: Interval(0.2, 0.5, curve: Curves.easeIn),
+      ),
+    );
   }
 
-  static Animation<Size> middleCardSizeAnim(AnimationController parent) {
-    return SizeTween(begin: cardsSize[1], end: cardsSize[0])
-        .animate(CurvedAnimation(parent: parent, curve: Interval(0.2, 0.5, curve: Curves.easeIn)));
+  static Animation<Size> middleCardSizeAnim(
+    AnimationController parent, {
+    @required Size begin,
+    @required Size end,
+  }) {
+    return SizeTween(begin: begin, end: end).animate(
+      CurvedAnimation(
+        parent: parent,
+        curve: Interval(0.2, 0.5, curve: Curves.easeIn),
+      ),
+    );
   }
 
   static Animation<Alignment> frontCardDisappearAlignmentAnim(AnimationController parent, Alignment beginAlign) {
     return AlignmentTween(
-            begin: beginAlign,
-            end: Alignment(
-                beginAlign.x > 0 ? beginAlign.x + 30.0 : beginAlign.x - 30.0, 0.0) // Has swiped to the left or right?
-            )
-        .animate(CurvedAnimation(parent: parent, curve: Interval(0.0, 0.5, curve: Curves.easeIn)));
+      begin: beginAlign,
+      end: Alignment(
+          beginAlign.x > 0 ? beginAlign.x + 30.0 : beginAlign.x - 30.0, 0.0), // Has swiped to the left or right?
+    ).animate(
+      CurvedAnimation(
+        parent: parent,
+        curve: Interval(0.0, 0.5, curve: Curves.easeIn),
+      ),
+    );
   }
 }
